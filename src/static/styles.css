@@ -87,15 +87,32 @@ section h3 {
   font-weight: bold;
 }
 
-.participants ul {
-  list-style-position: inside;
-  margin-left: 10px;
+
+.participants-list {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
 }
 
-.participants li {
+.participant-item {
   font-size: 14px;
   color: #555;
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.delete-participant {
+  cursor: pointer;
+  color: #c62828;
+  font-weight: bold;
+  font-size: 18px;
+  margin-left: 6px;
+  transition: color 0.2s;
+}
+.delete-participant:hover {
+  color: #a31515;
 }
 
 .form-group {
