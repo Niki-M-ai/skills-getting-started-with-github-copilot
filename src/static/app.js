@@ -19,15 +19,64 @@ document.addEventListener("DOMContentLoaded", () => {
         activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
+        
+        // Add delete icon next to each participant
+        const participantsList = details.participants
+          .map(participant => `
+            <li class="participant-item">
+              <span>${participant}</span>
+              <span class="delete-participant" title="Remove" data-activity="${name}" data-email="${participant}">&times;</span>
+            </li>
+          `)
+          .join("");
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants-section">
+            <strong>Participants (${details.participants.length}/${details.max_participants}):</strong>
+            <ul class="participants-list">
+              ${participantsList || '<li class="no-participants">No participants yet</li>'}
+            </ul>
+          </div>
         `;
 
+
         activitiesList.appendChild(activityCard);
+
+        // Add delete event listeners after rendering
+        setTimeout(() => {
+          activityCard.querySelectorAll('.delete-participant').forEach(icon => {
+            icon.addEventListener('click', async (e) => {
+              const activityName = icon.getAttribute('data-activity');
+              const email = icon.getAttribute('data-email');
+              if (!activityName || !email) return;
+              try {
+                const response = await fetch(`/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`, {
+                  method: 'POST',
+                });
+                const result = await response.json();
+                if (response.ok) {
+                  messageDiv.textContent = result.message || 'Participant removed.';
+                  messageDiv.className = 'success';
+                  fetchActivities();
+                } else {
+                  messageDiv.textContent = result.detail || 'Failed to remove participant.';
+                  messageDiv.className = 'error';
+                }
+                messageDiv.classList.remove('hidden');
+                setTimeout(() => messageDiv.classList.add('hidden'), 5000);
+              } catch (error) {
+                messageDiv.textContent = 'Error removing participant.';
+                messageDiv.className = 'error';
+                messageDiv.classList.remove('hidden');
+                setTimeout(() => messageDiv.classList.add('hidden'), 5000);
+              }
+            });
+          });
+        }, 0);
 
         // Add option to select dropdown
         const option = document.createElement("option");
@@ -58,10 +107,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await response.json();
 
+
       if (response.ok) {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities(); // Refresh activities list after successful signup
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
